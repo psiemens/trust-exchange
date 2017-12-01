@@ -1,0 +1,7 @@
+[package]
+name = "stock-exchange"
+version = "0.1.0"
+authors = ["Peter Siemens <peterjsiemens@gmail.com>"]
+
+[dependencies]
+rand = "0.3"
