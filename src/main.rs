@@ -7,10 +7,10 @@ use rand::distributions::{IndependentSample, Range};
 const NUM_RUNS: i32 = 100000;
 const NUM_PEOPLE: usize = 10;
 
-fn main() {
-    const SHARES: i32 = 100;
-    const PEOPLE: [i32; NUM_PEOPLE] = [0; NUM_PEOPLE];
+const SHARES: i32 = 100;
+const PEOPLE: [i32; NUM_PEOPLE] = [0; NUM_PEOPLE];
 
+fn main() {
     let stock = Arc::new(Mutex::new(SHARES));
     let people = Arc::new(Mutex::new(PEOPLE));
 
