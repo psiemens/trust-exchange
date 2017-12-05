@@ -66,7 +66,7 @@ fn main() {
         let stocks = stocks.clone();
         let should_finish = should_finish.clone();
         let handle = thread::Builder::new()
-            .name(format!("Thread {}", i).into())
+            .name(format!("Person {}", i).into())
             .spawn(move || {
                 let mut rng = rand::thread_rng();
 
@@ -92,7 +92,7 @@ fn main() {
                         }
 
                         println!(
-                            "Spawned {} attempting to sell {} of stock {} on iteration {}",
+                            "{} attempting to sell {} shares of stock {} on iteration {}",
                             thread::current().name().unwrap(),
                             -amount,
                             stock_index,
@@ -125,7 +125,7 @@ fn main() {
                         }
                     } else if amount > 0 {
                         println!(
-                            "Spawned {} attempting to buy {} of stock {} on iteration {}",
+                            "{} attempting to buy {} shares of stock {} on iteration {}",
                             thread::current().name().unwrap(),
                             amount,
                             stock_index,
@@ -140,16 +140,10 @@ fn main() {
                         let mut should_park = false;
                         {
                             let mut stock = stocks[stock_index].lock().unwrap();
-                            if stock.queue.len() >= 5 {
-                                // TODO: Someone need to figure out how to prevent
-                                // EVERYONE being on a queue, and therefore
-                                // nobody can do anything!
-                                println!("Deadlock prevention");
-                                continue;
-                            } else if stock.queue.len() > 0 {
+                            if stock.queue.len() > 0 {
                                 // Someone is ahead of line. Wait
                                 println!(
-                                    "Placing thread {} on queue (wait time: {}, available: {})",
+                                    "Placing {} on queue (wait time: {}, available: {})",
                                     thread::current().name().unwrap(),
                                     stock.queue.len(),
                                     stock.shares
@@ -175,21 +169,15 @@ fn main() {
                                     });
                                     should_park = true;
                                 } else {
-                                    if stock.shares >= amount {
-                                        stock.shares -= amount;
-                                        shares_of_each_stock[stock_index] += amount;
-                                        println!(
-                                            "{} purchased {} shares (current count: {})",
-                                            thread::current().name().unwrap(),
-                                            amount,
-                                            shares_of_each_stock[stock_index]
-                                        );
-                                    } else {
-                                        // Okay, too bad, they waited and didn't get anything,
-                                        // they'll  just need to deal with it and try to buy/sell
-                                        // something else!
-                                        println!("Giving up!");
-                                    }
+                                    stock.shares -= amount;
+                                    shares_of_each_stock[stock_index] += amount;
+                                    println!(
+                                        "{} purchased {} shares of stock {} (current count: {})",
+                                        thread::current().name().unwrap(),
+                                        amount,
+                                        stock_index,
+                                        shares_of_each_stock[stock_index]
+                                    );
                                 }
                             }
                         }
@@ -206,9 +194,10 @@ fn main() {
                                 stock.shares -= amount;
                                 shares_of_each_stock[stock_index] += amount;
                                 println!(
-                                    "{} purchased {} shares (current count: {})",
+                                    "{} purchased {} shares of stock {} (current count: {})",
                                     thread::current().name().unwrap(),
                                     amount,
+                                    stock_index,
                                     shares_of_each_stock[stock_index]
                                 );
                             } else {
@@ -229,16 +218,15 @@ fn main() {
 
     thread::sleep(Duration::from_millis(STOCK_END_TIME));
 
-    {
-        let mut should_finish = should_finish.write().unwrap();
-        *should_finish = true;
-    }
+    // Signal that all threads should finish
+    let mut should_finish = should_finish.write().unwrap();
+    *should_finish = true;
 
     let mut sum = 0;
     for handle in handles {
         handle.thread().unpark();
         let vals = handle.join().unwrap();
-        println!("Stock count for person: {:?}",  vals);
+        println!("Stock count for: {:?}", vals);
         for val in vals {
             sum += val;
         }
