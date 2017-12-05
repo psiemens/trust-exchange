@@ -226,7 +226,7 @@ fn main() {
     for handle in handles {
         handle.thread().unpark();
         let vals = handle.join().unwrap();
-        println!("Stock count for: {:?}", vals);
+        println!("Stock count for person: {:?}", vals);
         for val in vals {
             sum += val;
         }
